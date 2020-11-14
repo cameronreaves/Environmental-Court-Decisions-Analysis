@@ -1,4 +1,4 @@
-# Environmental-Court-Decisions-Analysis
+# US-Court-Environmental-Decisions-Analysis
 
 ## Question
 Does the politcal affiliation of the presidential administration affect the rate of success of environmental judicial decisions in the US District courts, controlling for political appointment of judges. 
