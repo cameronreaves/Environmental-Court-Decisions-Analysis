@@ -1,0 +1,125 @@
+---
+title: "Analysis of the Effect of the Political Party of Presidential Administration on US Court Environmental Decisions"
+author: Cameron Reaves
+output: pdf_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+data <- read_csv('data/env_courts.csv')
+data %>% 
+  head()
+```
+
+```{r}
+data %>% 
+  count(libcon,dem_appointed)
+
+
+data %>% 
+  count(libcon,dem_appointed) %>% 
+ggplot(aes(fill=as.factor(libcon), y=n, x=as.factor(dem_appointed))) + 
+    geom_col(position="dodge") + 
+    labs(x='Party Appointed By',y='Number of Cases',title = 'Number of Liberal or Conservative Votes by Party Appointment')
+
+```
+
+
+```{r}
+data %>% 
+  group_by(year) %>% 
+  summarise(mean_lib_vote = mean(libcon), .groups='drop') %>% 
+  ggplot(aes(year,mean_lib_vote)) +
+    geom_point() +
+    geom_smooth(method = 'loess',se = FALSE,formula = 'y ~ x') +
+    labs(x='year',y='Proportion Liberal Vote',title = 'Proportion of Liberal Votes over Time')
+```
+
+```{r}
+data %>% 
+  group_by(dem_appointed) %>% 
+  summarise(mean_lib_vote = mean(libcon), .groups='drop')
+
+data %>% 
+  group_by(dem_appointed,admin) %>% 
+  summarise(mean_lib_vote = mean(libcon), .groups='drop')
+```
+
+```{r}
+data$libcon <- factor(data$libcon)
+data$dem_appointed <- factor(data$dem_appointed)
+data$admin <- factor(data$admin)
+
+summary(glm(libcon ~ dem_appointed, data = data, family = "binomial"))
+
+
+summary(glm(libcon ~ admin, data = data, family = "binomial"))
+
+
+summary(glm(libcon ~ dem_appointed + admin, data = data, family = "binomial"))
+
+summary(glm(libcon ~ dem_appointed * admin, data = data, family = "binomial"))
+
+```
+
+
+
+```{r}
+
+post_trend <- data %>% 
+  filter(year > 1960)
+
+post_trend %>% 
+  count(libcon,dem_appointed) %>% 
+ggplot(aes(fill=as.factor(libcon), y=n, x=as.factor(dem_appointed))) + 
+    geom_col(position="dodge") + 
+    labs(x='Party Appointed By',y='Number of Cases',title = 'Number of Liberal or Conservative Votes by Party Appointment')
+
+```
+```{r}
+data <- read_csv('data/env_courts.csv')
+
+
+
+data <- data %>% 
+  filter(year > 1960)
+
+data %>% 
+  group_by(year) %>% 
+  summarise(mean_lib_vote = mean(libcon), .groups='drop') %>% 
+  ggplot(aes(year,mean_lib_vote)) +
+    geom_point() +
+    geom_smooth(method = 'loess',se = FALSE,formula = 'y ~ x') +
+    labs(x='year',y='Proportion Liberal Vote',title = 'Proportion of Liberal Votes over Time')
+```
+
+```{r}
+data %>% 
+  group_by(dem_appointed) %>% 
+  summarise(mean_lib_vote = mean(libcon), .groups='drop')
+
+data %>% 
+  group_by(dem_appointed,admin) %>% 
+  summarise(mean_lib_vote = mean(libcon), .groups='drop')
+```
+
+```{r}
+data$libcon <- factor(data$libcon)
+data$dem_appointed <- factor(data$dem_appointed)
+data$admin <- factor(data$admin)
+
+summary(glm(libcon ~ dem_appointed, data = data, family = "binomial"))
+
+
+summary(glm(libcon ~ admin, data = data, family = "binomial"))
+
+
+summary(glm(libcon ~ dem_appointed + admin, data = data, family = "binomial"))
+
+summary(glm(libcon ~ dem_appointed * admin, data = data, family = "binomial"))
+```
+
