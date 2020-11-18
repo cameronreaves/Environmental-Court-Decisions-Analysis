@@ -4,122 +4,113 @@ author: Cameron Reaves
 output: pdf_document
 ---
 
-```{r}
+```{r include=FALSE}
 library(tidyverse)
-```
-
-
-```{r}
+library(gt)
+library(gridExtra)
 data <- read_csv('data/env_courts.csv')
-data %>% 
-  head()
-```
-
-```{r}
-data %>% 
-  count(libcon,dem_appointed)
-
-
-data %>% 
-  count(libcon,dem_appointed) %>% 
-ggplot(aes(fill=as.factor(libcon), y=n, x=as.factor(dem_appointed))) + 
-    geom_col(position="dodge") + 
-    labs(x='Party Appointed By',y='Number of Cases',title = 'Number of Liberal or Conservative Votes by Party Appointment')
 
 ```
 
 
-```{r}
+# Introduction
+The nexus between judges, regulatory agencies, and interest groups is extremely complex and present ample opportunity for political science research. For example, judicial rulings have direct impact on the means and power of interest groups but also constrain the ability for regulatory agencies to implement and interpret legislation. Furthermore, interest groups participate in electoral politics directly by financing the campaigns of judicial candidates or indirectly through other political campaigns while providing specialized knowledge and expertise to regulatory agencies, sometimes even engaging in agency capture. In this paper, I am interested in exploring the relationship between judicial decisions for environmental issues and the party affiliation of presidential administration.
+
+Since the beginning of the 21st century, the Republican Party has tended to favor less strict environmental regulation, citing its deleterious effect on innovation and growth. However, the Democratic Party has been relatively more concerned with environmental issues. U.S District Court judges are nominated by the President and confirmed by the United States Senate. Obviously, presidential administrations would prefer to nominate judges that are both partial to their political agenda and widely perceived as admissible to a majority of political actors. This phenomena has lead to significant effort researching judicial bias and partisanship. In this paper, I would like to specifically investigate if the political affiliation of the presidential administration affect the rate of success of environmental judicial decisions in the US District courts, controlling for political appointment of judges. In other words, when there is a Democratic presidential administration, are environmental cases more or less successful than in years when there is a Republican presidential administration. This study does not seek to establish a causal relationship between the enumerable variables that would affect this response. Further research would necessitate a more complicated experimental or quasi-experimental research design. My null hypothesis in this paper is that there is no effect, while my alternative hypothesis is that the presidential administration does affect the success rate of environmental judicial decisions.
+
+# Findings
+
+Using a two-sample t-test, I compared the difference in means of liberal court case decisions between Republican and Democratic administrations, controlling for political appointment of the judges. At the alpha level .05, I did not find statistically significant evidence of a difference in means. In other words, for court cases where judges are appointed by the same political party of a presidential administration, there was no evidence that the difference in mean liberal votes over Democratic and Republican administrations was greater than or equal to zero. 
+
+Moreover, using the logistic regression method, I fit two models to predict the log odds or probability that a environmental court case is liberal. In both the model the has the variables democratic appointment and presidential administration alone and the model that fits the interaction effects between these variables as well, the coefficient of the variable presidential administration was smaller and not significant at the significance level .05. Put differently, the political party of the presidential administration that appointed the judge that presides over a case is much more significant than the current political affiliation of the administration at the time of the case.   
+
+
+# Methods and Data
+
+## Data Sources
+
+The data used for this analysis comes from two sources. The first is the Carp-Manning U.S. District Court Case Database contains decision-making data on 110,000+ decisions by federal district court judges handed down from 1927 to 2012 (https://www.umassd.edu/cas/polisci/resources/us-district-court-database/). I selected only environmental decisions and cases in the modern polical era, post President Franklin Roosevelt. The second is common knowledge, simply the years and political affiliation of past presidents over the same time period. I found a digitized source from Kaggle (https://www.kaggle.com/harshitagpt/us-presidents). Using the year of the court decison, I mapped the political affiliation of the administration at that time to each observation. Several random rows are presented below.
+
+```{r, echo=FALSE}
 data %>% 
+  select(year,libcon,dem_appointed,admin) %>% 
+  sample_n(6) %>% 
+  gt()
+
+```
+
+
+## Distribution of Data
+
+```{r echo=FALSE}
+p1 <- data %>% 
   group_by(year) %>% 
   summarise(mean_lib_vote = mean(libcon), .groups='drop') %>% 
   ggplot(aes(year,mean_lib_vote)) +
     geom_point() +
     geom_smooth(method = 'loess',se = FALSE,formula = 'y ~ x') +
-    labs(x='year',y='Proportion Liberal Vote',title = 'Proportion of Liberal Votes over Time')
-```
+    labs(x='year',y='Proportion Liberal Vote',title = 'Proportion of Liberal Votes over Time') +
+    theme_bw()
 
-```{r}
-data %>% 
-  group_by(dem_appointed) %>% 
-  summarise(mean_lib_vote = mean(libcon), .groups='drop')
-
-data %>% 
-  group_by(dem_appointed,admin) %>% 
-  summarise(mean_lib_vote = mean(libcon), .groups='drop')
-```
-
-```{r}
-data$libcon <- factor(data$libcon)
-data$dem_appointed <- factor(data$dem_appointed)
-data$admin <- factor(data$admin)
-
-summary(glm(libcon ~ dem_appointed, data = data, family = "binomial"))
-
-
-summary(glm(libcon ~ admin, data = data, family = "binomial"))
-
-
-summary(glm(libcon ~ dem_appointed + admin, data = data, family = "binomial"))
-
-summary(glm(libcon ~ dem_appointed * admin, data = data, family = "binomial"))
-
-```
-
-
-
-```{r}
-
-post_trend <- data %>% 
-  filter(year > 1960)
-
-post_trend %>% 
-  count(libcon,dem_appointed) %>% 
-ggplot(aes(fill=as.factor(libcon), y=n, x=as.factor(dem_appointed))) + 
-    geom_col(position="dodge") + 
-    labs(x='Party Appointed By',y='Number of Cases',title = 'Number of Liberal or Conservative Votes by Party Appointment')
-
-```
-```{r}
-data <- read_csv('data/env_courts.csv')
-
-
-
-data <- data %>% 
-  filter(year > 1960)
-
-data %>% 
+p2 <-  data %>% 
   group_by(year) %>% 
-  summarise(mean_lib_vote = mean(libcon), .groups='drop') %>% 
-  ggplot(aes(year,mean_lib_vote)) +
-    geom_point() +
-    geom_smooth(method = 'loess',se = FALSE,formula = 'y ~ x') +
-    labs(x='year',y='Proportion Liberal Vote',title = 'Proportion of Liberal Votes over Time')
+  count() %>% 
+   ggplot(aes(year,n)) +
+    geom_col() +
+   labs(x='Year',y='Cases',title = 'Number of Environmental Court Decisions over Time') +
+   theme_bw()
+
+grid.arrange(p1,p2)
 ```
 
-```{r}
-data %>% 
-  group_by(dem_appointed) %>% 
-  summarise(mean_lib_vote = mean(libcon), .groups='drop')
+There are relatively few environmental court decisions at the U.S. District courts prior to the 1970s. This contributes to the greater variability in the proportion of court decions that are liberal during this time period. As the number of court decisions increases and then remain relative constant, the variance of the proportion of liberal decions decreases. This pattern suggests that limiting the dataset to court cases after 1969, the begining of Richard Nixon's presidential term may make for more consistent analysis. 
 
-data %>% 
-  group_by(dem_appointed,admin) %>% 
-  summarise(mean_lib_vote = mean(libcon), .groups='drop')
+
+## T Tests
+
+Difference in Means for Court Cases by Judges Appointed by Democrats over Republican and Democratic Administrations
+```{r, echo=FALSE}
+# Difference for Liberal Appointed
+c <- data$libcon[data$dem_appointed == 1 & data$admin == 0]
+l <- data$libcon[data$dem_appointed == 1 & data$admin == 1] 
+t.test(c,l)
+
 ```
 
-```{r}
+Difference in Means for Court Cases by Judges Appointed by Republicans over Republican and Democratic Administrations
+```{r, echo=FALSE}
+# T Test for Conservative Appointed
+c <- data$libcon[data$dem_appointed == 1 & data$admin == 0]
+l <- data$libcon[data$dem_appointed == 1 & data$admin == 1]
+t.test(c,l)
+```
+
+
+## Logistic Regression
+
+```{r, echo=FALSE}
 data$libcon <- factor(data$libcon)
 data$dem_appointed <- factor(data$dem_appointed)
 data$admin <- factor(data$admin)
 
-summary(glm(libcon ~ dem_appointed, data = data, family = "binomial"))
+fit_1 <- glm(libcon ~ dem_appointed + admin, data = data, family = "binomial")
 
-
-summary(glm(libcon ~ admin, data = data, family = "binomial"))
-
-
-summary(glm(libcon ~ dem_appointed + admin, data = data, family = "binomial"))
-
-summary(glm(libcon ~ dem_appointed * admin, data = data, family = "binomial"))
+fit_2 <- glm(libcon ~ dem_appointed * admin, data = data, family = "binomial")
 ```
 
+```{r, results = 'asis',echo=FALSE}
+
+# Ignore rmd output, lools fine in the pdf
+stargazer::stargazer(fit_1, fit_2, title = "Liberal Court Decision Regressed on Covariates Democratic Appointed and Democratic Administration",
+                     covariate.labels = c("Democratic Appointed", "Democratic Administration", "Interaction Effect"),
+                     dep.var.labels = "Log Odds Coefficients for Binary Variables 0 = Republican, 1 = Democrat",
+                     header = FALSE)
+```
+
+
+
+\newpage
+
+# Conclusion
+
+I found the results of my analysis interesting. To keep my question simple and not too granular I avoided examining too many details about the characterists of the judges. For example, my original dataset had geo-spatial variables, such as state and county, race and gender variables for each judge and case decision. Perhaps future researchers could further examine this aspect of this question. Maybe there were some states or regions or even types of judges that have a response to a change in presidential administration policy that is currently hidden. Another interesting question is whether there is a lagging effect. Could there be an effect on current environmental case decisions because of the previous administration. That would certainly be easy to implement with the data that I have available.

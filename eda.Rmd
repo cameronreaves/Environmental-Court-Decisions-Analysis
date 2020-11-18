@@ -1,0 +1,173 @@
+---
+title: "Analysis of the Effect of the Political Party of Presidential Administration on US Court Environmental Decisions"
+author: Cameron Reaves
+output: pdf_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+data <- read_csv('data/env_courts.csv')
+data %>% 
+  head()
+```
+
+```{r}
+data %>% 
+  count(libcon,dem_appointed) %>% 
+  gt::gt() 
+
+
+# gender_rep_table <- prop.table(table(judges$woman,judges$republican))
+# rownames(gender_rep_table) <- c("Man", "Woman")
+# colnames(gender_rep_table) <- c("Democrat", "Republican")
+# 
+# # This does look better with knitr function, no need to add labels
+# knitr::kable(gender_rep_table)
+
+data %>% 
+  count(libcon,dem_appointed) %>% 
+ggplot(aes(fill=as.factor(libcon), y=n, x=as.factor(dem_appointed))) + 
+    geom_col(position="dodge") + 
+    labs(x='Party Appointed By',y='Number of Cases',title = 'Number of Liberal or Conservative Votes by Party Appointment')
+
+```
+
+
+```{r}
+p1 <- data %>% 
+  group_by(year) %>% 
+  summarise(mean_lib_vote = mean(libcon), .groups='drop') %>% 
+  ggplot(aes(year,mean_lib_vote)) +
+    geom_point() +
+    geom_smooth(method = 'loess',se = FALSE,formula = 'y ~ x') +
+    labs(x='year',y='Proportion Liberal Vote',title = 'Proportion of Liberal Votes over Time')
+```
+
+```{r}
+data %>% 
+  group_by(dem_appointed) %>% 
+  summarise(mean_lib_vote = mean(libcon), .groups='drop')
+
+data %>% 
+  group_by(dem_appointed,admin) %>% 
+  summarise(mean_lib_vote = mean(libcon), .groups='drop')
+```
+```{r}
+# Difference for Liberal Appointed
+c <- data$libcon[data$dem_appointed == 1 & data$admin == 0]
+l <- data$libcon[data$dem_appointed == 1 & data$admin == 1] 
+t.test(c,l)
+
+# T Test for Conservative Appointed
+c <- data$libcon[data$dem_appointed == 1 & data$admin == 0]
+l <- data$libcon[data$dem_appointed == 1 & data$admin == 1]
+t.test(c,l)
+
+```
+
+```{r}
+data$libcon <- factor(data$libcon)
+data$dem_appointed <- factor(data$dem_appointed)
+data$admin <- factor(data$admin)
+
+summary(glm(libcon ~ dem_appointed, data = data, family = "binomial"))
+
+
+summary(glm(libcon ~ admin, data = data, family = "binomial"))
+
+
+summary(glm(libcon ~ dem_appointed + admin, data = data, family = "binomial"))
+
+summary(glm(libcon ~ dem_appointed * admin, data = data, family = "binomial"))
+
+```
+
+
+
+```{r}
+
+post_trend <- data %>% 
+  filter(year > 1960)
+
+post_trend %>% 
+  count(libcon,dem_appointed) %>% 
+ggplot(aes(fill=as.factor(libcon), y=n, x=as.factor(dem_appointed))) + 
+    geom_col(position="dodge") + 
+    labs(x='Party Appointed By',y='Number of Cases',title = 'Number of Liberal or Conservative Votes by Party Appointment')
+
+```
+```{r}
+data <- read_csv('data/env_courts.csv')
+
+
+
+data <- data %>% 
+  filter(year > 1960)
+
+data %>% 
+  group_by(year) %>% 
+  summarise(mean_lib_vote = mean(libcon), .groups='drop') %>% 
+  ggplot(aes(year,mean_lib_vote)) +
+    geom_point() +
+    geom_smooth(method = 'loess',se = FALSE,formula = 'y ~ x') +
+    labs(x='year',y='Proportion Liberal Vote',title = 'Proportion of Liberal Votes over Time')
+```
+
+```{r}
+data %>% 
+  group_by(dem_appointed) %>% 
+  summarise(mean_lib_vote = mean(libcon), .groups='drop')
+
+data %>% 
+  group_by(dem_appointed,admin) %>% 
+  summarise(mean_lib_vote = mean(libcon), .groups='drop')
+```
+
+```{r}
+data$libcon <- factor(data$libcon)
+data$dem_appointed <- factor(data$dem_appointed)
+data$admin <- factor(data$admin)
+
+summary(glm(libcon ~ dem_appointed, data = data, family = "binomial"))
+
+
+summary(glm(libcon ~ admin, data = data, family = "binomial"))
+
+
+summary(glm(libcon ~ dem_appointed + admin, data = data, family = "binomial"))
+
+summary(glm(libcon ~ dem_appointed * admin, data = data, family = "binomial"))
+```
+
+```{r}
+# data %>% 
+#   count(libcon,dem_appointed,admin) %>% 
+#   gt() %>% 
+#   tab_header(title="Judicial Decisions by Category") %>% 
+#   cols_label(libcon = "Liberal Vote",dem_appointed="Appointed by Democrat",admin="Presidential Admin",n="Votes")
+  
+# p1 <- data %>% 
+#   filter(admin==0) %>% 
+#   count(libcon,dem_appointed) %>% 
+# ggplot(aes(fill=as.factor(libcon), y=n, x=as.factor(dem_appointed))) + 
+#     geom_col(position="dodge") + 
+#     labs(x='Party Appointment',y='Number of Cases',title = 'Number of Liberal or Conservative Votes by Party Appointment',legend="Liberal") +
+#     theme_bw()
+# 
+#   
+# p2 <- data %>% 
+#   filter(admin==1) %>% 
+#   count(libcon,dem_appointed) %>% 
+# ggplot(aes(fill=as.factor(libcon), y=n, x=as.factor(dem_appointed))) + 
+#     geom_col(position="dodge") + 
+#     labs(x='Party Appointment',y='Number of Cases',title = 'Number of Liberal or Conservative Votes by Party Appointment',legend="Liberal") +
+#     theme_bw()
+# 
+# grid.arrange(p1, p2, nrow = 1)
+```
+```
+
